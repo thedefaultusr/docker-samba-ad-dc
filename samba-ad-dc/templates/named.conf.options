@@ -1,0 +1,28 @@
+// https://wiki.samba.org/index.php/Setting_up_a_BIND_DNS_Server
+acl internals { 127.0.0.0/8; $DNS_CLIENT_SUBNET; };
+
+options {
+    directory "/var/cache/bind";
+    version "Go Away 0.0.7";
+    notify no;
+    empty-zones-enable no;
+    auth-nxdomain yes;
+    forwarders { $DNS_FORWARDER; };
+    allow-transfer { none; };
+
+    dnssec-validation no;
+
+    listen-on-v6 { none; };
+    listen-on port 53 { $HOST_IP; 127.0.0.1; };
+
+    minimal-responses yes;
+
+    allow-query { "internals"; };
+    allow-query-cache { "internals"; };
+
+    recursion yes;
+    allow-recursion { "internals"; };
+
+    // Kerberos-secured dynamic DNS updates (Samba 4.9+ keytab path)
+    tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab";
+};

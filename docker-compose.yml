@@ -1,0 +1,31 @@
+# First domain controller: provisions a new domain.
+# For additional DCs use docker-compose.join.yml.
+services:
+  samba-ad-dc:
+    image: ghcr.io/thedefaultusr/docker-samba-ad-dc:latest
+    hostname: DC1
+    network_mode: host
+    restart: unless-stopped
+    stop_grace_period: 30s
+    cap_add:
+      - SYS_ADMIN # store NT ACLs on SysVol (security.NTACL xattrs)
+      - SYS_TIME # chrony sets the host clock
+    dns: 127.0.0.1
+    dns_search: ad.example.com
+    environment:
+      MODE: provision
+      HOST_IP: 10.1.1.10
+      REALM: AD.EXAMPLE.COM
+      DOMAIN: EXAMPLE
+      SITE: Default-First-Site-Name
+      DNS_FORWARDER: 10.1.1.1
+      DNS_CLIENT_SUBNET: 10.1.0.0/16
+      NTP_CLIENT_SUBNET: 10.1.0.0/16
+      RSYNC_SYSVOL_ALLOW_HOSTS: 10.1.0.0/16
+      RSYNC_SYSVOL_PASSWORD: "change-me" # same on every DC
+      # Administrator password, only used on the first start (write $ as $$).
+      # WARNING: delete this line once the domain is provisioned, then run `docker compose up -d`.
+      DOMAIN_PASSWORD: "Change-Me-1!"
+    volumes:
+      - ./data:/var/lib/samba
+      - ./samba:/etc/samba

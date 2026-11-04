@@ -1,0 +1,31 @@
+# Additional domain controller: joins the domain created by docker-compose.yml.
+services:
+  samba-ad-dc:
+    image: ghcr.io/thedefaultusr/docker-samba-ad-dc:latest
+    hostname: DC2
+    network_mode: host
+    restart: unless-stopped
+    stop_grace_period: 30s
+    cap_add:
+      - SYS_ADMIN # store NT ACLs on SysVol (security.NTACL xattrs)
+      - SYS_TIME # chrony sets the host clock
+    dns: 127.0.0.1
+    dns_search: ad.example.com
+    environment:
+      MODE: join
+      HOST_IP: 10.1.4.10
+      PDC_IP: 10.1.1.10 # first DC (PDC emulator): join target and SysVol source
+      REALM: AD.EXAMPLE.COM
+      DOMAIN: EXAMPLE
+      SITE: TEST-SITE
+      DNS_FORWARDER: 10.1.4.1
+      DNS_CLIENT_SUBNET: 10.1.0.0/16
+      NTP_CLIENT_SUBNET: 10.1.0.0/16
+      RSYNC_SYSVOL_PASSWORD: "change-me" # same as on the first DC
+      # Domain admin used for the join, only used on the first start (write $ as $$).
+      # WARNING: delete DOMAIN_PASSWORD once the DC has joined, then run `docker compose up -d`.
+      DOMAIN_USER: Administrator
+      DOMAIN_PASSWORD: "Change-Me-1!"
+    volumes:
+      - ./data:/var/lib/samba
+      - ./samba:/etc/samba

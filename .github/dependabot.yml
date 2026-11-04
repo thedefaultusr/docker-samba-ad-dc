@@ -1,0 +1,10 @@
+# Weekly PR that bumps the GitHub Actions used by the workflows
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
